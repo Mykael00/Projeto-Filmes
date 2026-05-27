@@ -81,18 +81,24 @@ DELETE /favorites/:id
 ---
 
 Modelagem Inicial do Banco
-Usuários
+
+- Usuários -
+
 id
 nome
 email
 senha
-Filmes
+
+- Filmes -
+
 id
 titulo
 descricao
 categoria
 imagem
-Favoritos
+
+- Favoritos -
+
 id
 usuario_id
 filme_id

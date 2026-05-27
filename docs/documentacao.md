@@ -69,4 +69,4 @@ Deploy Futuro
 
 - Front-end na Vercel
 - Back-end na Vercel
-- Banco no Supabase
+- Banco no Supabase 

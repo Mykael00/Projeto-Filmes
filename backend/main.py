@@ -16,8 +16,6 @@ app.add_middleware(
 class Movie(BaseModel):
     titulo: str
     categoria: str
-    ano: int | None = None
-    descricao: str | None = None
 
 
 @app.get("/")
@@ -29,11 +27,11 @@ def home():
 def listar_filmes():
     with get_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute("SELECT id, titulo, categoria, ano, descricao FROM movies ORDER BY id")
+            cur.execute("SELECT id, titulo, categoria FROM movies ORDER BY id")
             rows = cur.fetchall()
 
     return [
-        {"id": r[0], "titulo": r[1], "categoria": r[2], "ano": r[3], "descricao": r[4]}
+        {"id": r[0], "titulo": r[1], "categoria": r[2]}
         for r in rows
     ]
 
@@ -43,7 +41,7 @@ def buscar_filme(movie_id: int):
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT id, titulo, categoria, ano, descricao FROM movies WHERE id = %s",
+                "SELECT id, titulo, categoria FROM movies WHERE id = %s",
                 (movie_id,)
             )
             row = cur.fetchone()
@@ -51,7 +49,7 @@ def buscar_filme(movie_id: int):
     if row is None:
         raise HTTPException(status_code=404, detail="Filme não encontrado")
 
-    return {"id": row[0], "titulo": row[1], "categoria": row[2], "ano": row[3], "descricao": row[4]}
+    return {"id": row[0], "titulo": row[1], "categoria": row[2]}
 
 
 @app.post("/movies")
@@ -60,16 +58,16 @@ def criar_filme(movie: Movie):
         with conn.cursor() as cur:
             cur.execute(
                 """
-                INSERT INTO movies (titulo, categoria, ano, descricao)
-                VALUES (%s, %s, %s, %s)
-                RETURNING id, titulo, categoria, ano, descricao
+                INSERT INTO movies (titulo, categoria)
+                VALUES (%s, %s)
+                RETURNING id, titulo, categoria
                 """,
-                (movie.titulo, movie.categoria, movie.ano, movie.descricao)
+                (movie.titulo, movie.categoria)
             )
             row = cur.fetchone()
             conn.commit()
 
-    return {"id": row[0], "titulo": row[1], "categoria": row[2], "ano": row[3], "descricao": row[4]}
+    return {"id": row[0], "titulo": row[1], "categoria": row[2]}
 
 
 @app.put("/movies/{movie_id}")
@@ -79,11 +77,11 @@ def atualizar_filme(movie_id: int, movie: Movie):
             cur.execute(
                 """
                 UPDATE movies
-                SET titulo = %s, categoria = %s, ano = %s, descricao = %s
+                SET titulo = %s, categoria = %s
                 WHERE id = %s
-                RETURNING id, titulo, categoria, ano, descricao
+                RETURNING id, titulo, categoria
                 """,
-                (movie.titulo, movie.categoria, movie.ano, movie.descricao, movie_id)
+                (movie.titulo, movie.categoria, movie_id)
             )
             row = cur.fetchone()
             conn.commit()
@@ -91,7 +89,7 @@ def atualizar_filme(movie_id: int, movie: Movie):
     if row is None:
         raise HTTPException(status_code=404, detail="Filme não encontrado")
 
-    return {"id": row[0], "titulo": row[1], "categoria": row[2], "ano": row[3], "descricao": row[4]}
+    return {"id": row[0], "titulo": row[1], "categoria": row[2]}
 
 
 @app.delete("/movies/{movie_id}")

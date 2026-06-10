@@ -18,6 +18,11 @@ class Movie(BaseModel):
     categoria: str
 
 
+class Favorite(BaseModel):
+    usuario: str
+    filme_id: int
+
+
 @app.get("/")
 def home():
     return {"message": "API de filmes funcionando!"}
@@ -107,3 +112,44 @@ def deletar_filme(movie_id: int):
         raise HTTPException(status_code=404, detail="Filme não encontrado")
 
     return {"message": "Filme deletado com sucesso"}
+
+
+@app.get("/favorites")
+def listar_favoritos():
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id, usuario, filme_id FROM favorites ORDER BY id"
+            )
+            rows = cur.fetchall()
+
+    return [
+        {
+            "id": r[0],
+            "usuario": r[1],
+            "filme_id": r[2]
+        }
+        for r in rows
+    ]
+
+
+@app.post("/favorites")
+def criar_favorito(favorite: Favorite):
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO favorites (usuario, filme_id)
+                VALUES (%s, %s)
+                RETURNING id, usuario, filme_id
+                """,
+                (favorite.usuario, favorite.filme_id)
+            )
+            row = cur.fetchone()
+            conn.commit()
+
+    return {
+        "id": row[0],
+        "usuario": row[1],
+        "filme_id": row[2]
+    }

@@ -3,7 +3,6 @@
     <h2>Favoritos</h2>
 
     <p v-if="loading">Carregando favoritos...</p>
-
     <p v-else-if="erro">{{ erro }}</p>
 
     <div v-else>
@@ -11,12 +10,26 @@
 
       <ul v-else>
         <li v-for="favorito in favoritos" :key="favorito.id">
-          Usuário: <strong>{{ favorito.usuario }}</strong> —
-          Filme ID: {{ favorito.filme_id }}
+          <div v-if="editandoId === favorito.id">
+            <input v-model="usuarioEditado" type="text" placeholder="Usuário" />
+            <input v-model="filmeIdEditado" type="number" placeholder="Filme ID" />
 
-          <button @click="excluirFavorito(favorito.id)">
-            Excluir
-          </button>
+            <button @click="salvarEdicao(favorito.id)">Salvar</button>
+            <button @click="cancelarEdicao">Cancelar</button>
+          </div>
+
+          <div v-else>
+            Usuário: <strong>{{ favorito.usuario }}</strong> —
+            Filme ID: {{ favorito.filme_id }}
+
+            <button @click="iniciarEdicao(favorito)">
+              Editar
+            </button>
+
+            <button @click="excluirFavorito(favorito.id)">
+              Excluir
+            </button>
+          </div>
         </li>
       </ul>
     </div>
@@ -31,6 +44,10 @@ const favoritos = ref([])
 const loading = ref(true)
 const erro = ref('')
 
+const editandoId = ref(null)
+const usuarioEditado = ref('')
+const filmeIdEditado = ref('')
+
 async function carregarFavoritos() {
   try {
     loading.value = true
@@ -40,6 +57,39 @@ async function carregarFavoritos() {
     erro.value = 'Erro ao carregar favoritos.'
   } finally {
     loading.value = false
+  }
+}
+
+function iniciarEdicao(favorito) {
+  editandoId.value = favorito.id
+  usuarioEditado.value = favorito.usuario
+  filmeIdEditado.value = favorito.filme_id
+}
+
+function cancelarEdicao() {
+  editandoId.value = null
+  usuarioEditado.value = ''
+  filmeIdEditado.value = ''
+}
+
+async function salvarEdicao(id) {
+  erro.value = ''
+
+  if (!usuarioEditado.value || !filmeIdEditado.value) {
+    erro.value = 'Preencha usuário e filme ID.'
+    return
+  }
+
+  try {
+    await axios.put(`http://127.0.0.1:8000/favorites/${id}`, {
+      usuario: usuarioEditado.value,
+      filme_id: Number(filmeIdEditado.value)
+    })
+
+    cancelarEdicao()
+    await carregarFavoritos()
+  } catch (error) {
+    erro.value = 'Erro ao editar favorito.'
   }
 }
 

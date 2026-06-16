@@ -35,10 +35,7 @@ def listar_filmes():
             cur.execute("SELECT id, titulo, categoria FROM movies ORDER BY id")
             rows = cur.fetchall()
 
-    return [
-        {"id": r[0], "titulo": r[1], "categoria": r[2]}
-        for r in rows
-    ]
+    return [{"id": r[0], "titulo": r[1], "categoria": r[2]} for r in rows]
 
 
 @app.get("/movies/{movie_id}")
@@ -119,7 +116,17 @@ def listar_favoritos():
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT id, usuario, filme_id FROM favorites ORDER BY id"
+                """
+                SELECT 
+                    f.id,
+                    f.usuario,
+                    f.filme_id,
+                    m.titulo,
+                    m.categoria
+                FROM favorites f
+                JOIN movies m ON f.filme_id = m.id
+                ORDER BY f.id
+                """
             )
             rows = cur.fetchall()
 
@@ -127,7 +134,9 @@ def listar_favoritos():
         {
             "id": r[0],
             "usuario": r[1],
-            "filme_id": r[2]
+            "filme_id": r[2],
+            "filme_titulo": r[3],
+            "filme_categoria": r[4]
         }
         for r in rows
     ]
@@ -157,6 +166,21 @@ def buscar_favorito(favorite_id: int):
 def criar_favorito(favorite: Favorite):
     with get_connection() as conn:
         with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT id FROM favorites
+                WHERE usuario = %s AND filme_id = %s
+                """,
+                (favorite.usuario, favorite.filme_id)
+            )
+            favorito_existente = cur.fetchone()
+
+            if favorito_existente:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Este filme já está nos favoritos deste usuário"
+                )
+
             cur.execute(
                 """
                 INSERT INTO favorites (usuario, filme_id)

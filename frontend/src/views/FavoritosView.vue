@@ -19,8 +19,11 @@
           </div>
 
           <div v-else>
-            Usuário: <strong>{{ favorito.usuario }}</strong> —
-            Filme ID: {{ favorito.filme_id }}
+            Usuário: <strong>{{ favorito.usuario }}</strong> <br />
+            Filme: <strong>{{ favorito.filme_titulo }}</strong> <br />
+            Categoria: {{ favorito.filme_categoria }}
+
+            <br />
 
             <button @click="iniciarEdicao(favorito)">
               Editar
@@ -51,6 +54,8 @@ const filmeIdEditado = ref('')
 async function carregarFavoritos() {
   try {
     loading.value = true
+    erro.value = ''
+
     const response = await axios.get('http://127.0.0.1:8000/favorites')
     favoritos.value = response.data
   } catch (error) {

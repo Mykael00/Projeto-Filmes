@@ -1,12 +1,29 @@
 <template>
   <section>
-    <h2>Favoritos</h2>
+    <h2>Meus Favoritos</h2>
+
+    <div v-if="usuario">
+      <p>
+        Usuário ativo:
+        <strong>{{ usuario }}</strong>
+      </p>
+    </div>
+
+    <div v-else>
+      <p>Você precisa criar ou selecionar um usuário para ver seus favoritos.</p>
+
+      <button @click="irParaHome">
+        👤 Criar Usuário
+      </button>
+    </div>
 
     <p v-if="loading">Carregando favoritos...</p>
     <p v-else-if="erro">{{ erro }}</p>
 
-    <div v-else>
-      <p v-if="favoritos.length === 0">Nenhum favorito cadastrado.</p>
+    <div v-else-if="usuario">
+      <p v-if="favoritos.length === 0">
+        Nenhum favorito cadastrado para este usuário.
+      </p>
 
       <ul v-else>
         <li v-for="favorito in favoritos" :key="favorito.id">
@@ -41,22 +58,42 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import axios from 'axios'
+
+const router = useRouter()
 
 const favoritos = ref([])
 const loading = ref(true)
 const erro = ref('')
+const usuario = ref('')
 
 const editandoId = ref(null)
 const usuarioEditado = ref('')
 const filmeIdEditado = ref('')
 
+function irParaHome() {
+  router.push('/')
+}
+
 async function carregarFavoritos() {
+  usuario.value = localStorage.getItem('usuario') || ''
+
+  if (!usuario.value) {
+    loading.value = false
+    return
+  }
+
   try {
     loading.value = true
     erro.value = ''
 
-    const response = await axios.get('http://127.0.0.1:8000/favorites')
+    const response = await axios.get('http://127.0.0.1:8000/favorites', {
+      params: {
+        usuario: usuario.value
+      }
+    })
+
     favoritos.value = response.data
   } catch (error) {
     erro.value = 'Erro ao carregar favoritos.'

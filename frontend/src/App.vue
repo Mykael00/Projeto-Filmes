@@ -1,7 +1,7 @@
 <template>
   <div class="app">
     <nav class="navbar">
-      <h1>BM Movies</h1>
+      <h1 class="logo">🎬 BM Movies</h1>
 
       <div class="links">
         <RouterLink to="/">Início</RouterLink>
@@ -11,6 +11,8 @@
       </div>
     </nav>
 
-    <RouterView />
+    <main class="conteudo">
+      <RouterView />
+    </main>
   </div>
 </template>

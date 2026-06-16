@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from typing import Optional
 from database import get_connection
 
 app = FastAPI()
@@ -112,22 +113,40 @@ def deletar_filme(movie_id: int):
 
 
 @app.get("/favorites")
-def listar_favoritos():
+def listar_favoritos(usuario: Optional[str] = None):
     with get_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute(
-                """
-                SELECT 
-                    f.id,
-                    f.usuario,
-                    f.filme_id,
-                    m.titulo,
-                    m.categoria
-                FROM favorites f
-                JOIN movies m ON f.filme_id = m.id
-                ORDER BY f.id
-                """
-            )
+            if usuario:
+                cur.execute(
+                    """
+                    SELECT 
+                        f.id,
+                        f.usuario,
+                        f.filme_id,
+                        m.titulo,
+                        m.categoria
+                    FROM favorites f
+                    JOIN movies m ON f.filme_id = m.id
+                    WHERE LOWER(f.usuario) = LOWER(%s)
+                    ORDER BY f.id
+                    """,
+                    (usuario,)
+                )
+            else:
+                cur.execute(
+                    """
+                    SELECT 
+                        f.id,
+                        f.usuario,
+                        f.filme_id,
+                        m.titulo,
+                        m.categoria
+                    FROM favorites f
+                    JOIN movies m ON f.filme_id = m.id
+                    ORDER BY f.id
+                    """
+                )
+
             rows = cur.fetchall()
 
     return [
@@ -169,7 +188,7 @@ def criar_favorito(favorite: Favorite):
             cur.execute(
                 """
                 SELECT id FROM favorites
-                WHERE usuario = %s AND filme_id = %s
+                WHERE LOWER(usuario) = LOWER(%s) AND filme_id = %s
                 """,
                 (favorite.usuario, favorite.filme_id)
             )

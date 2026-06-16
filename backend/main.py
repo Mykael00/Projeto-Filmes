@@ -133,6 +133,26 @@ def listar_favoritos():
     ]
 
 
+@app.get("/favorites/{favorite_id}")
+def buscar_favorito(favorite_id: int):
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id, usuario, filme_id FROM favorites WHERE id = %s",
+                (favorite_id,)
+            )
+            row = cur.fetchone()
+
+    if row is None:
+        raise HTTPException(status_code=404, detail="Favorito não encontrado")
+
+    return {
+        "id": row[0],
+        "usuario": row[1],
+        "filme_id": row[2]
+    }
+
+
 @app.post("/favorites")
 def criar_favorito(favorite: Favorite):
     with get_connection() as conn:
@@ -153,3 +173,46 @@ def criar_favorito(favorite: Favorite):
         "usuario": row[1],
         "filme_id": row[2]
     }
+
+
+@app.put("/favorites/{favorite_id}")
+def atualizar_favorito(favorite_id: int, favorite: Favorite):
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE favorites
+                SET usuario = %s, filme_id = %s
+                WHERE id = %s
+                RETURNING id, usuario, filme_id
+                """,
+                (favorite.usuario, favorite.filme_id, favorite_id)
+            )
+            row = cur.fetchone()
+            conn.commit()
+
+    if row is None:
+        raise HTTPException(status_code=404, detail="Favorito não encontrado")
+
+    return {
+        "id": row[0],
+        "usuario": row[1],
+        "filme_id": row[2]
+    }
+
+
+@app.delete("/favorites/{favorite_id}")
+def deletar_favorito(favorite_id: int):
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "DELETE FROM favorites WHERE id = %s RETURNING id",
+                (favorite_id,)
+            )
+            row = cur.fetchone()
+            conn.commit()
+
+    if row is None:
+        raise HTTPException(status_code=404, detail="Favorito não encontrado")
+
+    return {"message": "Favorito deletado com sucesso"}

@@ -1,7 +1,14 @@
 ```vue
 <template>
   <section>
-    <h2>Buscar filmes</h2>
+    <div class="search-hero">
+  <h2>🎬 Descubra seu próximo filme</h2>
+
+  <p>
+    Pesquise milhares de filmes através da integração
+    com a TMDb e monte sua coleção pessoal.
+  </p>
+</div>
 
     <div v-if="usuario">
       <p>
@@ -21,7 +28,7 @@
     </div>
 
     <div>
-      <label>Pesquisar filme:</label>
+      <h3>Pesquisar Filme</h3>
 
       <input
         v-model="termoBusca"
@@ -159,10 +166,19 @@ async function favoritarFilmeTmdb(filme) {
         ? `Gênero TMDb ID: ${filme.genre_ids[0]}`
         : 'Categoria não informada'
 
-    const filmeCriado = await axios.post(`${API_BACKEND}/movies`, {
-      titulo: filme.title,
-      categoria
-    })
+console.log('FILME TMDB', filme)
+
+const posterUrl = filme.poster_path
+  ? `https://image.tmdb.org/t/p/w500${filme.poster_path}`
+  : null
+
+console.log('POSTER URL', posterUrl)
+
+const filmeCriado = await axios.post(`${API_BACKEND}/movies`, {
+  titulo: filme.title,
+  categoria,
+  poster_url: posterUrl
+})
 
     await axios.post(`${API_BACKEND}/favorites`, {
       usuario: usuario.value,

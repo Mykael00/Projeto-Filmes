@@ -17,6 +17,7 @@ app.add_middleware(
 class Movie(BaseModel):
     titulo: str
     categoria: str
+    poster_url: Optional[str] = None
 
 
 class Favorite(BaseModel):
@@ -33,10 +34,18 @@ def home():
 def listar_filmes():
     with get_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute("SELECT id, titulo, categoria FROM movies ORDER BY id")
+            cur.execute(""" SELECT id, titulo, categoria, poster_url FROM movies ORDER BY id """)
             rows = cur.fetchall()
 
-    return [{"id": r[0], "titulo": r[1], "categoria": r[2]} for r in rows]
+    return [
+    {
+        "id": r[0],
+        "titulo": r[1],
+        "categoria": r[2],
+        "poster_url": r[3]
+    }
+    for r in rows
+]
 
 
 @app.get("/movies/{movie_id}")
@@ -61,16 +70,29 @@ def criar_filme(movie: Movie):
         with conn.cursor() as cur:
             cur.execute(
                 """
-                INSERT INTO movies (titulo, categoria)
-                VALUES (%s, %s)
-                RETURNING id, titulo, categoria
+                INSERT INTO movies (
+    titulo,
+    categoria,
+    poster_url
+)
+VALUES (%s, %s, %s)
+RETURNING id, titulo, categoria, poster_url
                 """,
-                (movie.titulo, movie.categoria)
+                (
+    movie.titulo,
+    movie.categoria,
+    movie.poster_url
+)
             )
             row = cur.fetchone()
             conn.commit()
 
-    return {"id": row[0], "titulo": row[1], "categoria": row[2]}
+    return {
+    "id": row[0],
+    "titulo": row[1],
+    "categoria": row[2],
+    "poster_url": row[3]
+}
 
 
 @app.put("/movies/{movie_id}")
@@ -119,12 +141,13 @@ def listar_favoritos(usuario: Optional[str] = None):
             if usuario:
                 cur.execute(
                     """
-                    SELECT 
+                    SELECT
                         f.id,
                         f.usuario,
                         f.filme_id,
                         m.titulo,
-                        m.categoria
+                        m.categoria,
+                        m.poster_url
                     FROM favorites f
                     JOIN movies m ON f.filme_id = m.id
                     WHERE LOWER(f.usuario) = LOWER(%s)
@@ -135,12 +158,13 @@ def listar_favoritos(usuario: Optional[str] = None):
             else:
                 cur.execute(
                     """
-                    SELECT 
+                   SELECT
                         f.id,
                         f.usuario,
                         f.filme_id,
                         m.titulo,
-                        m.categoria
+                        m.categoria,
+                        m.poster_url
                     FROM favorites f
                     JOIN movies m ON f.filme_id = m.id
                     ORDER BY f.id
@@ -150,15 +174,16 @@ def listar_favoritos(usuario: Optional[str] = None):
             rows = cur.fetchall()
 
     return [
-        {
-            "id": r[0],
-            "usuario": r[1],
-            "filme_id": r[2],
-            "filme_titulo": r[3],
-            "filme_categoria": r[4]
-        }
-        for r in rows
-    ]
+    {
+        "id": r[0],
+        "usuario": r[1],
+        "filme_id": r[2],
+        "filme_titulo": r[3],
+        "filme_categoria": r[4],
+        "poster_url": r[5]
+    }
+    for r in rows
+]
 
 
 @app.get("/favorites/{favorite_id}")
@@ -259,3 +284,31 @@ def deletar_favorito(favorite_id: int):
         raise HTTPException(status_code=404, detail="Favorito não encontrado")
 
     return {"message": "Favorito deletado com sucesso"}
+
+@app.get("/ranking")
+def ranking_filmes():
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT
+                    m.id,
+                    m.titulo,
+                    COUNT(f.id) as total_favoritos
+                FROM movies m
+                INNER JOIN favorites f
+                    ON m.id = f.filme_id
+                GROUP BY m.id, m.titulo
+                ORDER BY total_favoritos DESC, m.titulo ASC
+                LIMIT 10
+            """)
+
+            rows = cur.fetchall()
+
+    return [
+        {
+            "id": row[0],
+            "titulo": row[1],
+            "favoritos": row[2]
+        }
+        for row in rows
+    ]

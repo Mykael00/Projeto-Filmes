@@ -2,57 +2,106 @@
   <section>
     <h2>Meus Favoritos</h2>
 
-    <div v-if="usuario">
-      <p>
-        Usuário ativo:
-        <strong>{{ usuario }}</strong>
-      </p>
+<div v-if="usuario">
+  <p>
+    Usuário ativo:
+    <strong>{{ usuario }}</strong>
+  </p>
+</div>
+
+<div v-else>
+  <p>Você precisa criar ou selecionar um usuário para ver seus favoritos.</p>
+
+  <button @click="irParaHome">
+    👤 Criar Usuário
+  </button>
+</div>
+
+<p v-if="loading">Carregando favoritos...</p>
+<p v-else-if="erro">{{ erro }}</p>
+
+<div v-else-if="usuario">
+
+  <p v-if="favoritos.length === 0">
+    Nenhum favorito cadastrado para este usuário.
+  </p>
+
+  <div
+    v-else
+    class="favoritos-grid"
+  >
+
+    <div
+      v-for="favorito in favoritos"
+      :key="favorito.id"
+      class="favorito-card"
+    >
+
+      <div v-if="editandoId === favorito.id">
+
+        <input
+          v-model="usuarioEditado"
+          type="text"
+          placeholder="Usuário"
+        />
+
+        <input
+          v-model="filmeIdEditado"
+          type="number"
+          placeholder="Filme ID"
+        />
+
+        <button @click="salvarEdicao(favorito.id)">
+          Salvar
+        </button>
+
+        <button @click="cancelarEdicao">
+          Cancelar
+        </button>
+
+      </div>
+
+      <div v-else>
+
+        <img
+          v-if="favorito.poster_url"
+          :src="favorito.poster_url"
+          :alt="favorito.filme_titulo"
+          class="favorito-poster"
+        />
+
+        <h3>
+          🎬 {{ favorito.filme_titulo }}
+        </h3>
+
+        <p>
+          <strong>Usuário:</strong>
+          {{ favorito.usuario }}
+        </p>
+
+        <p>
+          ❤️ Favoritado
+        </p>
+
+        <div class="favorito-acoes">
+
+          <button @click="iniciarEdicao(favorito)">
+            Editar
+          </button>
+
+          <button @click="excluirFavorito(favorito.id)">
+            Excluir
+          </button>
+
+        </div>
+
+      </div>
+
     </div>
 
-    <div v-else>
-      <p>Você precisa criar ou selecionar um usuário para ver seus favoritos.</p>
+  </div>
 
-      <button @click="irParaHome">
-        👤 Criar Usuário
-      </button>
-    </div>
-
-    <p v-if="loading">Carregando favoritos...</p>
-    <p v-else-if="erro">{{ erro }}</p>
-
-    <div v-else-if="usuario">
-      <p v-if="favoritos.length === 0">
-        Nenhum favorito cadastrado para este usuário.
-      </p>
-
-      <ul v-else>
-        <li v-for="favorito in favoritos" :key="favorito.id">
-          <div v-if="editandoId === favorito.id">
-            <input v-model="usuarioEditado" type="text" placeholder="Usuário" />
-            <input v-model="filmeIdEditado" type="number" placeholder="Filme ID" />
-
-            <button @click="salvarEdicao(favorito.id)">Salvar</button>
-            <button @click="cancelarEdicao">Cancelar</button>
-          </div>
-
-          <div v-else>
-            Usuário: <strong>{{ favorito.usuario }}</strong> <br />
-            Filme: <strong>{{ favorito.filme_titulo }}</strong> <br />
-            Categoria: {{ favorito.filme_categoria }}
-
-            <br />
-
-            <button @click="iniciarEdicao(favorito)">
-              Editar
-            </button>
-
-            <button @click="excluirFavorito(favorito.id)">
-              Excluir
-            </button>
-          </div>
-        </li>
-      </ul>
-    </div>
+</div>
   </section>
 </template>
 

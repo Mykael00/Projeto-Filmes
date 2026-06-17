@@ -137,11 +137,14 @@ async function carregarFavoritos() {
     loading.value = true
     erro.value = ''
 
-    const response = await axios.get('http://127.0.0.1:8000/favorites', {
-      params: {
-        usuario: usuario.value
-      }
-    })
+    const response = await axios.get(
+  'https://projeto-filmes-2msx.onrender.com/favorites',
+  {
+    params: {
+      usuario: usuario.value
+    }
+  }
+)
 
     favoritos.value = response.data
   } catch (error) {
@@ -172,10 +175,13 @@ async function salvarEdicao(id) {
   }
 
   try {
-    await axios.put(`http://127.0.0.1:8000/favorites/${id}`, {
-      usuario: usuarioEditado.value,
-      filme_id: Number(filmeIdEditado.value)
-    })
+    await axios.put(
+  `https://projeto-filmes-2msx.onrender.com/favorites/${id}`,
+  {
+    usuario: usuarioEditado.value,
+    filme_id: Number(filmeIdEditado.value)
+  }
+)
 
     cancelarEdicao()
     await carregarFavoritos()
@@ -192,7 +198,7 @@ async function excluirFavorito(id) {
   }
 
   try {
-    await axios.delete(`http://127.0.0.1:8000/favorites/${id}`)
+    await axios.delete(`https://projeto-filmes-2msx.onrender.com/favorites/${id}`)
     await carregarFavoritos()
   } catch (error) {
     erro.value = 'Erro ao excluir favorito.'

@@ -1,4 +1,4 @@
-```vue
+vue
 <template>
   <section>
     <div class="search-hero">
@@ -97,7 +97,7 @@ import axios from 'axios'
 
 const router = useRouter()
 
-const API_BACKEND = 'http://127.0.0.1:8000'
+const API_BACKEND = 'https://projeto-filmes-2msx.onrender.com'
 const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY
 
 const usuario = ref('')
@@ -199,4 +199,4 @@ const filmeCriado = await axios.post(`${API_BACKEND}/movies`, {
   }
 }
 </script>
-```
+

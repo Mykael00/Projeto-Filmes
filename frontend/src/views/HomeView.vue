@@ -141,7 +141,7 @@ const erro = ref('')
 const ranking = ref([])
 const destaques = ref([])
 const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY
-const API_BACKEND = 'http://127.0.0.1:8000'
+const API_BACKEND = 'https://projeto-filmes-2msx.onrender.com'
 
 onMounted(() => {
   usuarioSalvo.value = localStorage.getItem('usuario') || ''

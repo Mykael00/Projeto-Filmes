@@ -68,31 +68,53 @@ def buscar_filme(movie_id: int):
 def criar_filme(movie: Movie):
     with get_connection() as conn:
         with conn.cursor() as cur:
+
+            cur.execute(
+                """
+                SELECT id, titulo, categoria, poster_url
+                FROM movies
+                WHERE LOWER(titulo) = LOWER(%s)
+                LIMIT 1
+                """,
+                (movie.titulo,)
+            )
+
+            filme_existente = cur.fetchone()
+
+            if filme_existente:
+                return {
+                    "id": filme_existente[0],
+                    "titulo": filme_existente[1],
+                    "categoria": filme_existente[2],
+                    "poster_url": filme_existente[3]
+                }
+
             cur.execute(
                 """
                 INSERT INTO movies (
-    titulo,
-    categoria,
-    poster_url
-)
-VALUES (%s, %s, %s)
-RETURNING id, titulo, categoria, poster_url
+                    titulo,
+                    categoria,
+                    poster_url
+                )
+                VALUES (%s, %s, %s)
+                RETURNING id, titulo, categoria, poster_url
                 """,
                 (
-    movie.titulo,
-    movie.categoria,
-    movie.poster_url
-)
+                    movie.titulo,
+                    movie.categoria,
+                    movie.poster_url
+                )
             )
+
             row = cur.fetchone()
             conn.commit()
 
     return {
-    "id": row[0],
-    "titulo": row[1],
-    "categoria": row[2],
-    "poster_url": row[3]
-}
+        "id": row[0],
+        "titulo": row[1],
+        "categoria": row[2],
+        "poster_url": row[3]
+    }
 
 
 @app.put("/movies/{movie_id}")
